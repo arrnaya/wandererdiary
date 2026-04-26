@@ -57,7 +57,7 @@ export function Footer() {
                   alt="WandererDiary"
                   width={360}
                   height={90}
-                  className="h-20 w-auto object-contain"
+                  className="h-14 md:h-20 w-auto object-contain"
                   priority
                 />
               </Link>
@@ -65,17 +65,17 @@ export function Footer() {
                 A community for travel lovers and storytellers. Explore. Experience. Express.
               </p>
               <div className="flex gap-3">
-                <a href="#" className="p-2.5 bg-brand-darkGreen rounded-full hover:bg-brand-amber transition-colors">
-                  <Instagram className="w-4 h-4 text-white" />
+                <a href="#" className="p-2 md:p-2.5 bg-brand-darkGreen rounded-full hover:bg-brand-amber transition-colors">
+                  <Instagram className="w-3.5 h-3.5 md:w-4 md:h-4 text-white" />
                 </a>
-                <a href="#" className="p-2.5 bg-brand-darkGreen rounded-full hover:bg-brand-amber transition-colors">
-                  <Twitter className="w-4 h-4 text-white" />
+                <a href="#" className="p-2 md:p-2.5 bg-brand-darkGreen rounded-full hover:bg-brand-amber transition-colors">
+                  <Twitter className="w-3.5 h-3.5 md:w-4 md:h-4 text-white" />
                 </a>
-                <a href="#" className="p-2.5 bg-brand-darkGreen rounded-full hover:bg-brand-amber transition-colors">
-                  <Youtube className="w-4 h-4 text-white" />
+                <a href="#" className="p-2 md:p-2.5 bg-brand-darkGreen rounded-full hover:bg-brand-amber transition-colors">
+                  <Youtube className="w-3.5 h-3.5 md:w-4 md:h-4 text-white" />
                 </a>
-                <a href="#" className="p-2.5 bg-brand-darkGreen rounded-full hover:bg-brand-amber transition-colors">
-                  <Facebook className="w-4 h-4 text-white" />
+                <a href="#" className="p-2 md:p-2.5 bg-brand-darkGreen rounded-full hover:bg-brand-amber transition-colors">
+                  <Facebook className="w-3.5 h-3.5 md:w-4 md:h-4 text-white" />
                 </a>
               </div>
             </div>

@@ -1,4 +1,4 @@
-import type { CollectionConfig } from 'payload'
+import type { CollectionConfig, Where } from 'payload'
 
 export const Chats: CollectionConfig = {
   slug: 'chats',
@@ -9,12 +9,14 @@ export const Chats: CollectionConfig = {
   access: {
     read: ({ req }) => {
       if (req.user?.role === 'admin') return true
+      const userId = req.user?.id
+      if (!userId) return false
       return {
         or: [
-          { sender: { equals: req.user?.id } },
-          { receiver: { equals: req.user?.id } },
+          { sender: { equals: userId } },
+          { receiver: { equals: userId } },
         ],
-      }
+      } as Where
     },
     create: ({ req }) => !!req.user,
     update: ({ req }) => req.user?.role === 'admin',

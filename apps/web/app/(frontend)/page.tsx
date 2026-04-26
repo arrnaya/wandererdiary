@@ -82,7 +82,7 @@ export default function HomePage() {
   return (
     <div className="animate-fade-in">
       {/* Hero Section */}
-      <section className="relative h-[480px] md:h-[500px] lg:h-[720px] overflow-hidden bg-brand-offWhite">
+      <section className="relative h-[580px] md:h-[600px] lg:h-[750px] overflow-hidden bg-brand-offWhite -mt-16 md:-mt-20">
         <Image
           src="/images/landing-page-hero-bg.png"
           alt="Wanderer looking at mountains"
@@ -98,7 +98,7 @@ export default function HomePage() {
           </svg>
         </div>
 
-        <div className="relative container mx-auto px-4 h-full flex items-start pt-24 md:pt-28">
+        <div className="relative container mx-auto px-4 h-full flex items-start pt-28 md:pt-32">
           <div className="max-w-2xl">
             <p className="text-xs md:text-sm tracking-[0.25em] uppercase mb-2 text-brand-darkGreen font-semibold">
               Explore. Experience. Express.
@@ -107,7 +107,7 @@ export default function HomePage() {
             <h1 className="font-display text-5xl md:text-7xl font-bold leading-[1.1] mb-2 text-brand-darkGreen">
               Every journey<br />has a story.
             </h1>
-            <p className="font-script text-4xl md:text-5xl text-brand-amberRed mb-5">
+            <p className="font-script text-4xl md:text-5xl text-brand-amber mb-5 drop-shadow-[0_2px_4px_rgba(0,0,0,0.25)]">
               Share yours.
             </p>
             <p className="text-white text-base md:text-lg mb-7 max-w-md leading-relaxed">

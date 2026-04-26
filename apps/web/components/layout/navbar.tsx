@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Search, Menu, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
@@ -17,10 +17,25 @@ const navLinks = [
 
 export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 40)
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-white/95 backdrop-blur-sm border-b border-brand-cream/50">
-      <div className="container mx-auto px-4 h-25 flex items-center justify-between">
+    <header
+      className={`fixed top-0 left-0 right-0 z-50 w-full bg-white/95 backdrop-blur-sm border-b border-brand-cream/50 transition-all duration-300 ease-out ${
+        scrolled ? 'shadow-md' : ''
+      }`}
+    >
+      <div
+        className={`container mx-auto px-4 flex items-center justify-between transition-all duration-300 ease-out ${
+          scrolled ? 'h-14 md:h-16' : 'h-20 md:h-24'
+        }`}
+      >
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 group">
           <Image
@@ -28,17 +43,19 @@ export function Navbar() {
             alt="WandererDiary"
             width={360}
             height={100}
-            className="h-20 w-auto object-contain"
+            className={`w-auto object-contain transition-all duration-300 ease-out ${
+              scrolled ? 'h-9 md:h-11' : 'h-14 md:h-[72px]'
+            }`}
             priority
           />
         </Link>
 
         {/* Desktop Nav */}
-        <nav className="hidden lg:flex items-center gap-8">
+        <nav className="hidden lg:flex items-center gap-6 xl:gap-8">
           {navLinks.map((link) => (
             <Link
               key={link.href}
-              href={link.href}
+              href={link.href as any}
               className="text-sm font-medium text-brand-dark/70 hover:text-brand-darkGreen transition-colors relative group"
             >
               {link.label}
@@ -62,8 +79,9 @@ export function Navbar() {
 
         {/* Mobile Toggle */}
         <button
-          className="lg:hidden p-2"
+          className="lg:hidden p-2 -mr-2"
           onClick={() => setMobileOpen(!mobileOpen)}
+          aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
         >
           {mobileOpen ? (
             <X className="w-6 h-6 text-brand-darkGreen" />
@@ -74,20 +92,24 @@ export function Navbar() {
       </div>
 
       {/* Mobile Menu */}
-      {mobileOpen && (
-        <div className="lg:hidden border-t border-brand-cream bg-white">
-          <nav className="container mx-auto px-4 py-4 flex flex-col gap-3">
+      <div
+        className={`lg:hidden overflow-hidden transition-all duration-300 ease-out ${
+          mobileOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'
+        }`}
+      >
+        <div className="border-t border-brand-cream bg-white shadow-lg">
+          <nav className="container mx-auto px-4 py-4 flex flex-col gap-1">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
-                href={link.href}
-                className="text-sm font-medium text-brand-dark/80 hover:text-brand-darkGreen py-2"
+                href={link.href as any}
+                className="text-sm font-medium text-brand-dark/80 hover:text-brand-darkGreen hover:bg-brand-cream/50 rounded-lg px-3 py-3 transition-colors"
                 onClick={() => setMobileOpen(false)}
               >
                 {link.label}
               </Link>
             ))}
-            <div className="flex gap-3 pt-3 border-t border-brand-cream">
+            <div className="flex gap-3 pt-3 mt-2 border-t border-brand-cream">
               <Button variant="secondary" className="flex-1" asChild>
                 <Link href="/login">Log In</Link>
               </Button>
@@ -97,7 +119,7 @@ export function Navbar() {
             </div>
           </nav>
         </div>
-      )}
+      </div>
     </header>
   )
 }

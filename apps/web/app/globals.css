@@ -31,6 +31,10 @@
   * {
     @apply border-border;
   }
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 80px;
+  }
 }
 
 /* Scoped to frontend pages only — does not leak into Payload Admin */
@@ -55,5 +59,16 @@
   }
   .gradient-overlay {
     background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 50%);
+  }
+  /* GPU-accelerated smooth transforms */
+  .gpu-layer {
+    will-change: transform;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+  }
+  /* Content visibility for off-screen sections */
+  .content-visibility-auto {
+    content-visibility: auto;
+    contain-intrinsic-size: 0 500px;
   }
 }
