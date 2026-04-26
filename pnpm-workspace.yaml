@@ -1,0 +1,11 @@
+packages:
+  - apps/*
+
+ignoredBuiltDependencies:
+  - esbuild
+  - keccak
+  - msgpackr-extract
+  - protobufjs
+  - secp256k1
+  - sharp
+  - unrs-resolver

@@ -1,0 +1,18 @@
+{
+  "name": "wandererdiary-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "pnpm --filter wandererdiary-web dev",
+    "build": "pnpm --filter wandererdiary-web build",
+    "start": "pnpm --filter wandererdiary-web start",
+    "lint": "pnpm --filter wandererdiary-web lint",
+    "payload": "pnpm --filter wandererdiary-web payload"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0"
+  }
+}

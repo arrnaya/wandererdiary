@@ -1,0 +1,59 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 30 33% 98%;
+    --foreground: 0 0% 17%;
+    --card: 30 33% 98%;
+    --card-foreground: 0 0% 17%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 17%;
+    --primary: 158 37% 17%;
+    --primary-foreground: 30 43% 92%;
+    --secondary: 30 43% 92%;
+    --secondary-foreground: 158 37% 17%;
+    --muted: 30 20% 94%;
+    --muted-foreground: 0 0% 40%;
+    --accent: 32 68% 57%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 30 20% 88%;
+    --input: 30 20% 88%;
+    --ring: 158 37% 17%;
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+}
+
+/* Scoped to frontend pages only — does not leak into Payload Admin */
+.frontend-page h1,
+.frontend-page h2,
+.frontend-page h3,
+.frontend-page h4,
+.frontend-page h5,
+.frontend-page h6 {
+  font-family: var(--font-playfair), 'Playfair Display', serif;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  .font-script {
+    font-family: var(--font-dancing), 'Dancing Script', cursive;
+  }
+  .gradient-hero {
+    background: linear-gradient(90deg, rgba(30,61,52,0.85) 0%, rgba(30,61,52,0.4) 50%, transparent 100%);
+  }
+  .gradient-overlay {
+    background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 50%);
+  }
+}
