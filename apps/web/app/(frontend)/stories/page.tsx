@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { getPayload } from 'payload'
 import config from '@payload-config'
+import { getLocalCoverImage } from '@/lib/image-fallback'
 
 const categories = ['All Categories', 'Adventure', 'Destination', 'Experience', 'Tips', 'Photo Story']
 
@@ -77,7 +78,7 @@ export default async function StoriesPage() {
                   category: story.category || 'Destination',
                   coverImage: story.coverImage?.url
                     ? { url: story.coverImage.url, alt: story.coverImage.alt || story.title }
-                    : undefined,
+                    : getLocalCoverImage(story.slug, story.title),
                   author: story.author
                     ? { name: story.author.name, avatar: story.author.avatar }
                     : undefined,

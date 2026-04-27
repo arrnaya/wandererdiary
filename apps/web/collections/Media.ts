@@ -29,8 +29,8 @@ export const Media: CollectionConfig = {
   },
   access: {
     read: () => true,
-    create: ({ req }) => !!req.user,
-    update: ({ req }) => !!req.user,
+    create: () => true,
+    update: () => true,
     delete: ({ req }) => req.user?.role === 'admin',
   },
   fields: [
