@@ -15,6 +15,32 @@ export const Authors: CollectionConfig = {
     },
     delete: ({ req }) => req.user?.role === 'admin',
   },
+  hooks: {
+    afterChange: [
+      async ({ doc, operation, req }) => {
+        if (operation === 'create' && doc.email) {
+          // Link past anonymous stories
+          try {
+            const result = await req.payload.update({
+              collection: 'stories',
+              where: {
+                guestEmail: { equals: doc.email },
+                author: { exists: false },
+              },
+              data: {
+                author: doc.id,
+              },
+            })
+            if (result.errors.length === 0) {
+              console.log(`Linked ${result.docs.length} stories to new author ${doc.email}`)
+            }
+          } catch (e) {
+            console.error('Failed to link anonymous stories:', e)
+          }
+        }
+      },
+    ],
+  },
   fields: [
     {
       name: 'name',

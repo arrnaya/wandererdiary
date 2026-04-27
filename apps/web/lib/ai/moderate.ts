@@ -1,43 +1,58 @@
-import Anthropic from '@anthropic-ai/sdk'
+import { generateChatCompletion, MODELS } from './gateway'
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-
-export async function moderateComment(content: string): Promise<{
-  isClean: boolean
-  confidence: number
+async function runModeration(text: string): Promise<{
+  safe: boolean
   flags: string[]
+  score: number
 }> {
   try {
-    const message = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
-      max_tokens: 1024,
+    const { text: responseText } = await generateChatCompletion({
+      model: MODELS.fast,
       messages: [
         {
+          role: 'system',
+          content:
+            'You are a content safety moderator. Evaluate text for inappropriate, harmful, or low-quality travel content. Respond as JSON.',
+        },
+        {
           role: 'user',
-          content: `You are a content moderation AI for WandererDiary. Analyze this comment for:
-- Obscenity / profanity
-- Hate speech
-- Harassment
-- Spam
-- Harmful content
-- Personal attacks
-
-Comment: "${content}"
-
-Respond ONLY as JSON: {"isClean": true/false, "confidence": 0.0-1.0, "flags": ["reason1", "reason2"]}
-Be strict but fair. Reject only genuinely harmful content.`,
+          content: `Evaluate this travel content for safety and quality:\n\n${text.substring(0, 2000)}\n\nRespond as JSON:\n{\n  "safe": true/false,\n  "flags": ["list of issues if any"],\n  "score": 0-100 (quality score)\n}`,
         },
       ],
+      max_tokens: 1024,
+      temperature: 0.2,
     })
-    const text = message.content[0].type === 'text' ? message.content[0].text : ''
-    const jsonMatch = text.match(/\{[\s\S]*\}/)
+
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/)
     if (jsonMatch) {
       return JSON.parse(jsonMatch[0])
     }
-    return { isClean: true, confidence: 0.5, flags: [] }
+    return { safe: true, flags: [], score: 80 }
   } catch (error) {
     console.error('Moderation failed:', error)
-    // Fail-safe: approve if AI fails
-    return { isClean: true, confidence: 0, flags: ['ai-error'] }
+    return { safe: true, flags: ['moderation-unavailable'], score: 50 }
+  }
+}
+
+export async function moderateContent(text: string): Promise<{
+  safe: boolean
+  flags: string[]
+  score: number
+}> {
+  return runModeration(text)
+}
+
+export async function moderateComment(text: string): Promise<{
+  safe: boolean
+  isClean: boolean
+  flags: string[]
+  score: number
+  confidence: number
+}> {
+  const result = await runModeration(text)
+  return {
+    ...result,
+    isClean: result.safe,
+    confidence: result.score / 100,
   }
 }

@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "payload": "payload",
-    "generate:types": "payload generate:types"
+    "generate:types": "payload generate:types",
+    "seed:destinations": "tsx scripts/seed-top-destinations.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.32.0",
@@ -25,6 +26,8 @@
     "@radix-ui/react-slot": "^1.1.0",
     "@radix-ui/react-tabs": "^1.1.0",
     "@radix-ui/react-toast": "^1.2.0",
+    "@tailwindcss/typography": "^0.5.19",
+    "@uiw/react-md-editor": "^4.1.0",
     "ai": "^3.4.0",
     "autoprefixer": "^10.4.0",
     "bcryptjs": "^2.4.3",
@@ -40,6 +43,7 @@
     "ipfs-http-client": "^60.0.0",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.454.0",
+    "marked": "^18.0.2",
     "meilisearch": "^0.45.0",
     "nanoid": "^5.0.0",
     "next": "^15.0.0",
@@ -51,7 +55,7 @@
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.53.0",
     "resend": "^4.0.0",
-    "sharp": "^0.33.0",
+    "sharp": "^0.33.5",
     "slugify": "^1.6.0",
     "tailwind-merge": "^2.5.0",
     "tailwindcss": "^3.4.0",

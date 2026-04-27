@@ -1,10 +1,9 @@
-import Anthropic from '@anthropic-ai/sdk'
-import OpenAI from 'openai'
+import { generateChatCompletion, MODELS } from './gateway'
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
-
-export async function generateSEO(content: string, title: string): Promise<{
+export async function generateSEO(
+  content: string,
+  title: string
+): Promise<{
   title: string
   description: string
   keywords: string
@@ -12,13 +11,17 @@ export async function generateSEO(content: string, title: string): Promise<{
   suggestions: string[]
 }> {
   try {
-    const message = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
-      max_tokens: 2048,
+    const { text } = await generateChatCompletion({
+      model: MODELS.fast,
       messages: [
         {
+          role: 'system',
+          content:
+            'You are an SEO expert for travel blogs. Generate optimized metadata. Respond as JSON.',
+        },
+        {
           role: 'user',
-          content: `You are an SEO expert for travel blogs. Generate SEO metadata for this story.
+          content: `Generate SEO metadata for this story.
 Current title: ${title}
 
 Content: ${content.substring(0, 3000)}
@@ -33,8 +36,10 @@ Respond as JSON:
 }`,
         },
       ],
+      max_tokens: 2048,
+      temperature: 0.5,
     })
-    const text = message.content[0].type === 'text' ? message.content[0].text : ''
+
     const jsonMatch = text.match(/\{[\s\S]*\}/)
     if (jsonMatch) {
       return JSON.parse(jsonMatch[0])

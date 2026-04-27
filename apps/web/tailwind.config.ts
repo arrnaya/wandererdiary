@@ -7,6 +7,12 @@ const config: Config = {
     './components/**/*.{js,ts,jsx,tsx,mdx}',
     './lib/**/*.{js,ts,jsx,tsx,mdx}',
   ],
+  safelist: [
+    'grid', 'grid-cols-1', 'grid-cols-2', 'md:grid-cols-2', 'gap-4', 'gap-6',
+    'rounded-xl', 'rounded-lg', 'object-cover', 'w-full', 'h-64', 'h-auto',
+    'bg-brand-offWhite', 'bg-brand-cream', 'border-l-4', 'border-brand-teal', 'border-brand-amber',
+    'p-4', 'p-6', 'my-6', 'font-bold', 'text-brand-darkGreen', 'shadow-sm', 'aspect-video'
+  ],
   theme: {
     extend: {
       colors: {
@@ -84,6 +90,9 @@ const config: Config = {
       },
     },
   },
-  plugins: [require('tailwindcss-animate')],
+  plugins: [
+    require('tailwindcss-animate'),
+    require('@tailwindcss/typography'),
+  ],
 }
 export default config

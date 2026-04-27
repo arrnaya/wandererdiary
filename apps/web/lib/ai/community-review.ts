@@ -1,6 +1,4 @@
-import Anthropic from '@anthropic-ai/sdk'
-
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+import { generateChatCompletion, MODELS } from './gateway'
 
 export async function reviewCommunityPost(
   caption: string,
@@ -13,14 +11,17 @@ export async function reviewCommunityPost(
   feedback: string
 }> {
   try {
-    const message = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
-      max_tokens: 1024,
+    const { text } = await generateChatCompletion({
+      model: MODELS.fast,
       messages: [
         {
+          role: 'system',
+          content:
+            "You are an AI content reviewer for WandererDiary's Wanderlust Community. Review posts for originality and helpfulness. Respond as JSON.",
+        },
+        {
           role: 'user',
-          content: `You are an AI content reviewer for WandererDiary's Wanderlust Community.
-Review this travel post for originality and helpfulness to other travelers.
+          content: `Review this travel post for originality and helpfulness to other travelers.
 
 Caption: "${caption}"
 Media files attached: ${mediaCount}
@@ -42,15 +43,29 @@ High scores (80+) should be given to posts with specific locations, tips, and un
 Low scores should go to generic or promotional content.`,
         },
       ],
+      max_tokens: 1024,
+      temperature: 0.3,
     })
-    const text = message.content[0].type === 'text' ? message.content[0].text : ''
+
     const jsonMatch = text.match(/\{[\s\S]*\}/)
     if (jsonMatch) {
       return JSON.parse(jsonMatch[0])
     }
-    return { originality: 50, helpfulness: 50, overall: 50, tokens: 5, feedback: 'Review pending.' }
+    return {
+      originality: 50,
+      helpfulness: 50,
+      overall: 50,
+      tokens: 5,
+      feedback: 'Review pending.',
+    }
   } catch (error) {
     console.error('Community review failed:', error)
-    return { originality: 50, helpfulness: 50, overall: 50, tokens: 5, feedback: 'Review service unavailable.' }
+    return {
+      originality: 50,
+      helpfulness: 50,
+      overall: 50,
+      tokens: 5,
+      feedback: 'Review service unavailable.',
+    }
   }
 }

@@ -3,82 +3,53 @@ import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { StoryCard } from '@/components/story/story-card'
 import { Globe, BookOpen, Feather, Users, ArrowRight, Send } from 'lucide-react'
+import { getPayload } from 'payload'
+import config from '@payload-config'
+import { polishOneStory } from '@/lib/ai/polish'
 
-const featuredStories = [
-  {
-    id: '1',
-    title: 'Finding Paradise in El Nido, Philippines',
-    slug: 'finding-paradise-el-nido',
-    category: 'Destination',
-    coverImage: { url: 'https://images.unsplash.com/photo-1518509562904-e7ef99cdcc86?w=800&q=80', alt: 'El Nido' },
-    author: { name: 'Sarah Mitchell', avatar: { url: '' } },
-    publishedAt: '2024-05-12',
-  },
-  {
-    id: '2',
-    title: 'A Week in Santorini: Sunsets & Sea',
-    slug: 'week-in-santorini',
-    category: 'Experience',
-    coverImage: { url: 'https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?w=800&q=80', alt: 'Santorini' },
-    author: { name: 'James Carter', avatar: { url: '' } },
-    publishedAt: '2024-05-08',
-  },
-  {
-    id: '3',
-    title: 'Trekking the Himalayas: Lessons from the Mountains',
-    slug: 'trekking-himalayas',
-    category: 'Adventure',
-    coverImage: { url: 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=800&q=80', alt: 'Himalayas' },
-    author: { name: 'Arjun Mehta', avatar: { url: '' } },
-    publishedAt: '2024-05-05',
-  },
-]
+async function getHomepageData(searchParams?: any) {
+  const payload = await getPayload({ config })
+  if (searchParams?.polish === 'true') {
+    console.log('Running story polish...')
+    const res = await polishOneStory(payload)
+    console.log('Polish result:', res)
+  }
 
-const latestStories = [
-  {
-    id: '4',
-    title: 'Exploring Kyoto: A Blend of Tradition and Tranquility',
-    slug: 'exploring-kyoto',
-    excerpt: 'Kyoto is a city where ancient traditions meet beautiful simplicity. Every corner has a story to tell.',
-    category: 'Destination',
-    coverImage: { url: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=400&q=80', alt: 'Kyoto' },
-    author: { name: 'Daniel Kim', avatar: { url: '' } },
-    publishedAt: '2024-05-14',
-    readTime: 5,
-  },
-  {
-    id: '5',
-    title: 'Road Tripping Iceland: The Ultimate Itinerary',
-    slug: 'iceland-road-trip',
-    excerpt: 'From waterfalls to volcanic beaches, here is our 7-day road trip across Iceland\'s Ring Road.',
-    category: 'Adventure',
-    coverImage: { url: 'https://images.unsplash.com/photo-1520638023360-6def43369781?w=400&q=80', alt: 'Iceland' },
-    author: { name: 'Lena Hoffman', avatar: { url: '' } },
-    publishedAt: '2024-05-11',
-    readTime: 7,
-  },
-  {
-    id: '6',
-    title: 'Lost in Morocco: Colors, Culture & Kindness',
-    slug: 'lost-in-morocco',
-    excerpt: 'A soulful journey through the medinas, mountains, and magical moments.',
-    category: 'Experience',
-    coverImage: { url: 'https://images.unsplash.com/photo-1489749798305-4fea3ae63d43?w=400&q=80', alt: 'Morocco' },
-    author: { name: 'Omar Farid', avatar: { url: '' } },
-    publishedAt: '2024-05-09',
-    readTime: 6,
-  },
-]
+  const featuredStories = await payload.find({
+    collection: 'stories',
+    where: { status: { equals: 'published' } },
+    sort: '-publishedAt',
+    limit: 3,
+    depth: 2,
+  })
 
-const topDestinations = [
-  { name: 'Bali, Indonesia', image: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=100&q=80' },
-  { name: 'Switzerland', image: 'https://images.unsplash.com/photo-1527668752968-14dc70a27c95?w=100&q=80' },
-  { name: 'New Zealand', image: 'https://images.unsplash.com/photo-1469521669194-babb45599def?w=100&q=80' },
-  { name: 'Portugal', image: 'https://images.unsplash.com/photo-1555881400-74d7acaacd8b?w=100&q=80' },
-  { name: 'Thailand', image: 'https://images.unsplash.com/photo-1552465011-b4e21bf6e79a?w=100&q=80' },
-]
+  const latestStories = await payload.find({
+    collection: 'stories',
+    where: { status: { equals: 'published' } },
+    sort: '-publishedAt',
+    limit: 6,
+    depth: 2,
+  })
 
-export default function HomePage() {
+  const topDestinations = await payload.find({
+    collection: 'destinations',
+    where: { worldRanking: { less_than_equal: 10 } },
+    sort: 'worldRanking',
+    limit: 5,
+    depth: 1,
+  })
+
+  return { featuredStories, latestStories, topDestinations }
+}
+
+export default async function HomePage({ searchParams }: { searchParams: any }) {
+  const params = await searchParams
+  const { featuredStories, latestStories, topDestinations } = await getHomepageData(params)
+
+  const featured = featuredStories.docs.slice(0, 3)
+  const latest = latestStories.docs.slice(0, 3)
+  const destinations = topDestinations.docs
+
   return (
     <div className="animate-fade-in">
       {/* Hero Section */}
@@ -111,7 +82,7 @@ export default function HomePage() {
               Share yours.
             </p>
             <p className="text-white text-base md:text-lg mb-7 max-w-md leading-relaxed">
-              WandererDiary is a global community where travelers share real experiences, 
+              WandererDiary is a global community where travelers share real experiences,
               inspiring stories, and practical tips from around the world.
             </p>
             <div className="flex gap-3">
@@ -177,8 +148,24 @@ export default function HomePage() {
             </Button>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {featuredStories.map((story) => (
-              <StoryCard key={story.id} story={story} variant="featured" />
+            {featured.map((story: any) => (
+              <StoryCard
+                key={story.id}
+                story={{
+                  id: story.id,
+                  title: story.title,
+                  slug: story.slug,
+                  category: story.category || 'Destination',
+                  coverImage: story.coverImage?.url
+                    ? { url: story.coverImage.url, alt: story.coverImage.alt || story.title }
+                    : undefined,
+                  author: story.author
+                    ? { name: story.author.name, avatar: story.author.avatar }
+                    : undefined,
+                  publishedAt: story.publishedAt,
+                }}
+                variant="featured"
+              />
             ))}
           </div>
         </div>
@@ -197,13 +184,33 @@ export default function HomePage() {
                 Recent from the Community
               </h2>
               <div className="space-y-6">
-                {latestStories.map((story) => (
-                  <StoryCard key={story.id} story={story} variant="horizontal" />
+                {latest.map((story: any) => (
+                  <StoryCard
+                    key={story.id}
+                    story={{
+                      id: story.id,
+                      title: story.title,
+                      slug: story.slug,
+                      excerpt: story.excerpt,
+                      category: story.category || 'Destination',
+                      coverImage: story.coverImage?.url
+                        ? { url: story.coverImage.url, alt: story.coverImage.alt || story.title }
+                        : undefined,
+                      author: story.author
+                        ? { name: story.author.name, avatar: story.author.avatar }
+                        : undefined,
+                      publishedAt: story.publishedAt,
+                      readTime: story.readTime,
+                    }}
+                    variant="horizontal"
+                  />
                 ))}
               </div>
-              <Button variant="outline" className="mt-8 gap-2">
-                Load More Stories
-                <ArrowRight className="w-4 h-4" />
+              <Button variant="outline" className="mt-8 gap-2" asChild>
+                <Link href="/stories">
+                  Load More Stories
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
               </Button>
             </div>
 
@@ -213,14 +220,20 @@ export default function HomePage() {
               <div className="bg-brand-offWhite rounded-xl p-6">
                 <h3 className="font-display text-xs tracking-[0.15em] uppercase font-semibold text-brand-darkGreen mb-4">Top Destinations</h3>
                 <div className="space-y-3">
-                  {topDestinations.map((dest) => (
+                  {destinations.map((dest: any) => (
                     <Link
-                      key={dest.name}
-                      href={`/destinations`}
+                      key={dest.id}
+                      href={`/destinations/${dest.slug}`}
                       className="flex items-center gap-3 group"
                     >
                       <div className="relative w-10 h-10 rounded-full overflow-hidden shrink-0 ring-2 ring-brand-cream">
-                        <Image src={dest.image} alt={dest.name} fill className="object-cover" />
+                        {dest.coverImage?.url ? (
+                          <Image src={dest.coverImage.url} alt={dest.name} fill className="object-cover" />
+                        ) : (
+                          <div className="w-full h-full bg-brand-cream flex items-center justify-center text-xs font-bold text-brand-darkGreen">
+                            {dest.name[0]}
+                          </div>
+                        )}
                       </div>
                       <span className="text-sm font-medium group-hover:text-brand-amber transition-colors">
                         {dest.name}

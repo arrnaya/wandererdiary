@@ -12,7 +12,7 @@ export const Stories: CollectionConfig = {
       if (req.user?.role === 'admin' || req.user?.role === 'editor') return true
       return { status: { equals: 'published' } }
     },
-    create: ({ req }) => !!req.user,
+    create: () => true, // Allow anonymous posting
     update: ({ req, id }) => {
       if (req.user?.role === 'admin' || req.user?.role === 'editor') return true
       return { author: { equals: req.user?.id } }
@@ -65,7 +65,21 @@ export const Stories: CollectionConfig = {
       name: 'author',
       type: 'relationship',
       relationTo: 'authors',
-      required: true,
+      required: false, // Made optional for anonymous posts
+    },
+    {
+      name: 'guestName',
+      type: 'text',
+      admin: {
+        condition: (data) => !data.author,
+      },
+    },
+    {
+      name: 'guestEmail',
+      type: 'email',
+      admin: {
+        condition: (data) => !data.author,
+      },
     },
     {
       name: 'status',
@@ -94,7 +108,6 @@ export const Stories: CollectionConfig = {
       name: 'coverImage',
       type: 'upload',
       relationTo: 'media',
-      required: true,
     },
     {
       name: 'excerpt',

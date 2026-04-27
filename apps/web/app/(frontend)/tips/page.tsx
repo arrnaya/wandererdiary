@@ -1,57 +1,42 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { Clock, Lightbulb } from 'lucide-react'
+import { getPayload } from 'payload'
+import config from '@payload-config'
 
-const tips = [
-  {
-    id: '1',
-    title: '10 Packing Tips for Long-Term Travelers',
-    slug: 'packing-tips-long-term',
-    category: 'Packing',
-    excerpt: 'Pack smart, travel light, and enjoy the journey without the extra baggage.',
-    coverImage: 'https://images.unsplash.com/photo-1553531384-cc64ac80f931?w=400&q=80',
-    author: 'Sarah Mitchell',
-    publishedAt: '2024-05-10',
-  },
-  {
-    id: '2',
-    title: 'How to Travel on a Budget in 2024',
-    slug: 'travel-budget-2024',
-    category: 'Budget',
-    excerpt: 'Save more, spend less. Tips and tricks for budget travelers.',
-    coverImage: 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=400&q=80',
-    author: 'Lena Hoffman',
-    publishedAt: '2024-05-08',
-  },
-  {
-    id: '3',
-    title: 'Staying Safe While Traveling Solo',
-    slug: 'solo-travel-safety',
-    category: 'Safety',
-    excerpt: 'Your safety is your superpower. Travel smart with these solo tips.',
-    coverImage: 'https://images.unsplash.com/photo-1501504905252-473c47e087f8?w=400&q=80',
-    author: 'Arjun Mehta',
-    publishedAt: '2024-05-06',
-  },
-]
+const categories = ['All Tips', 'Planning', 'Packing', 'Budget', 'Safety', 'Photography', 'Solo Travel', 'Food', 'Culture']
 
-const categories = ['All Tips', 'Planning', 'Packing', 'Budget', 'Safety', 'Photography', 'Solo Travel']
+async function getTips() {
+  const payload = await getPayload({ config })
+  const result = await payload.find({
+    collection: 'tips',
+    where: { status: { equals: 'published' } },
+    sort: '-publishedAt',
+    limit: 50,
+    depth: 2,
+  })
+  return result.docs
+}
 
 export const metadata = {
   title: 'Travel Tips & Guides',
   description: 'Practical tips to help you travel smarter and better.',
 }
 
-export default function TipsPage() {
+export default async function TipsPage() {
+  const tips = await getTips()
+
   return (
     <div className="animate-fade-in">
       <section className="py-16 bg-brand-offWhite">
         <div className="container mx-auto px-4">
-          <h1 className="font-display text-4xl md:text-5xl font-bold text-brand-darkGreen mb-2">
-            Travel Tips & Guides
-          </h1>
+          <div className="flex items-center gap-3 mb-2">
+            <Lightbulb className="w-8 h-8 text-brand-amber" />
+            <h1 className="font-display text-4xl md:text-5xl font-bold text-brand-darkGreen">
+              Travel Tips & Guides
+            </h1>
+          </div>
           <p className="text-muted-foreground mb-8">
             Practical tips to help you travel smarter and better.
           </p>
@@ -69,18 +54,24 @@ export default function TipsPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {tips.map((tip) => (
+            {tips.map((tip: any) => (
               <article
                 key={tip.id}
                 className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow"
               >
                 <Link href={`/tips/${tip.slug}`} className="relative block aspect-[16/9]">
-                  <Image
-                    src={tip.coverImage}
-                    alt={tip.title}
-                    fill
-                    className="object-cover"
-                  />
+                  {tip.coverImage?.url ? (
+                    <Image
+                      src={tip.coverImage.url}
+                      alt={tip.title}
+                      fill
+                      className="object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-brand-darkGreen flex items-center justify-center">
+                      <Lightbulb className="w-8 h-8 text-white/50" />
+                    </div>
+                  )}
                 </Link>
                 <div className="p-5">
                   <Badge className="mb-2">{tip.category}</Badge>
@@ -90,19 +81,29 @@ export default function TipsPage() {
                     </h3>
                   </Link>
                   <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
-                    {tip.excerpt}
+                    {tip.excerpt || 'Read this travel tip to travel smarter.'}
                   </p>
                   <div className="flex items-center justify-between mt-4 text-xs text-muted-foreground">
-                    <span>{tip.author}</span>
+                    <span>{tip.author?.name || 'Wanderer'}</span>
                     <span className="flex items-center gap-1">
                       <Clock className="w-3 h-3" />
-                      {tip.publishedAt}
+                      {tip.publishedAt ? new Date(tip.publishedAt).toLocaleDateString() : 'Recently'}
                     </span>
                   </div>
                 </div>
               </article>
             ))}
           </div>
+
+          {tips.length === 0 && (
+            <div className="text-center py-20">
+              <Lightbulb className="w-12 h-12 text-brand-cream mx-auto mb-4" />
+              <p className="text-muted-foreground text-lg">No tips published yet.</p>
+              <p className="text-sm text-muted-foreground mt-2">
+                Check back soon for AI-generated travel wisdom.
+              </p>
+            </div>
+          )}
         </div>
       </section>
     </div>

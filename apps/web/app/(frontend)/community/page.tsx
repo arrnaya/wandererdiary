@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -19,65 +19,93 @@ import {
   Wallet,
 } from 'lucide-react'
 
-const communityPosts = [
-  {
-    id: '1',
-    caption: 'Sunset over the Sahara. The colors changed every minute. Unforgettable! 🐪🌅 #Morocco #Sahara',
-    author: { name: 'Omar Farid', avatar: '' },
-    media: [
-      { url: 'https://images.unsplash.com/photo-1509023464722-18d996393ca8?w=600&q=80', type: 'image' },
-    ],
-    location: 'Merzouga, Morocco',
-    likes: 234,
-    comments: 18,
-    aiScore: { overall: 92 },
-    nomadTokens: 9,
-    nftMinted: true,
-    createdAt: '2024-05-15',
-  },
-  {
-    id: '2',
-    caption: 'Hidden waterfall in Bali that no one talks about. 2 hour trek but absolutely worth every step! 💦',
-    author: { name: 'Sarah Mitchell', avatar: '' },
-    media: [
-      { url: 'https://images.unsplash.com/photo-1432405972618-c60b0225b8f9?w=600&q=80', type: 'image' },
-      { url: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=600&q=80', type: 'image' },
-    ],
-    location: 'Bali, Indonesia',
-    likes: 567,
-    comments: 42,
-    aiScore: { overall: 95 },
-    nomadTokens: 10,
-    nftMinted: true,
-    createdAt: '2024-05-14',
-  },
-  {
-    id: '3',
-    caption: 'Northern Lights in Iceland. Nature\'s own light show! 🌌',
-    author: { name: 'Lena Hoffman', avatar: '' },
-    media: [
-      { url: 'https://images.unsplash.com/photo-1531366936337-7c912a4589a7?w=600&q=80', type: 'image' },
-    ],
-    location: 'Reykjavik, Iceland',
-    likes: 891,
-    comments: 67,
-    aiScore: { overall: 88 },
-    nomadTokens: 8,
-    nftMinted: false,
-    createdAt: '2024-05-13',
-  },
-]
+interface CommunityPost {
+  id: string
+  caption: string
+  author: {
+    name: string
+    avatar?: string
+  }
+  media: Array<{
+    url?: string
+    type: string
+  }>
+  location?: string
+  likes: number
+  comments?: number
+  aiScore?: {
+    overall: number
+  }
+  nomadTokensEarned?: number
+  nftMinted?: boolean
+  createdAt: string
+}
 
-const leaderboard = [
-  { rank: 1, name: 'Sarah Mitchell', posts: 47, tokens: 450, avatar: '' },
-  { rank: 2, name: 'Lena Hoffman', posts: 38, tokens: 380, avatar: '' },
-  { rank: 3, name: 'Omar Farid', posts: 32, tokens: 320, avatar: '' },
-  { rank: 4, name: 'Arjun Mehta', posts: 28, tokens: 280, avatar: '' },
-  { rank: 5, name: 'James Carter', posts: 25, tokens: 250, avatar: '' },
-]
+interface LeaderboardUser {
+  rank: number
+  name: string
+  posts: number
+  tokens: number
+  avatar?: string
+}
 
 export default function CommunityPage() {
   const [activeTab, setActiveTab] = useState('feed')
+  const [posts, setPosts] = useState<CommunityPost[]>([])
+  const [leaderboard, setLeaderboard] = useState<LeaderboardUser[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        // Fetch community posts
+        const postsRes = await fetch('/api/community-posts?limit=50&sort=-createdAt&depth=2')
+        if (postsRes.ok) {
+          const postsData = await postsRes.json()
+          const mappedPosts = postsData.docs.map((doc: any) => ({
+            id: doc.id,
+            caption: doc.caption,
+            author: {
+              name: doc.author?.name || 'Unknown',
+              avatar: doc.author?.avatar?.url,
+            },
+            media: doc.media?.map((m: any) => ({
+              url: m.file?.url,
+              type: m.type,
+            })) || [],
+            location: doc.location,
+            likes: doc.likes || 0,
+            comments: 0,
+            aiScore: doc.aiScore,
+            nomadTokensEarned: doc.nomadTokensEarned || 0,
+            nftMinted: doc.nftMinted,
+            createdAt: doc.createdAt,
+          }))
+          setPosts(mappedPosts)
+        }
+
+        // Fetch leaderboard (authors sorted by tokens)
+        const authorsRes = await fetch('/api/authors?limit=10&sort=-nomadTokens')
+        if (authorsRes.ok) {
+          const authorsData = await authorsRes.json()
+          const mappedLeaderboard = authorsData.docs.map((doc: any, index: number) => ({
+            rank: index + 1,
+            name: doc.name,
+            posts: Math.floor((doc.nomadTokens || 0) / 10), // Approximate
+            tokens: doc.nomadTokens || 0,
+            avatar: doc.avatar?.url,
+          }))
+          setLeaderboard(mappedLeaderboard)
+        }
+      } catch (error) {
+        console.error('Failed to fetch community data:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [])
 
   return (
     <div className="animate-fade-in">
@@ -90,7 +118,7 @@ export default function CommunityPage() {
                 Wanderlust Community
               </h1>
               <p className="text-white/80 max-w-lg">
-                Share your travel photos and videos. Earn Nomad tokens for original, helpful content. 
+                Share your travel photos and videos. Earn Nomad tokens for original, helpful content.
                 Mint your best shots as NFTs!
               </p>
             </div>
@@ -130,70 +158,91 @@ export default function CommunityPage() {
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
                 {/* Posts Feed */}
                 <div className="lg:col-span-2 space-y-6">
-                  {communityPosts.map((post) => (
-                    <article key={post.id} className="bg-white rounded-xl shadow-sm overflow-hidden">
-                      {/* Header */}
-                      <div className="flex items-center justify-between p-4">
-                        <div className="flex items-center gap-3">
-                          <Avatar className="w-10 h-10">
-                            <AvatarImage src={post.author.avatar} />
-                            <AvatarFallback className="bg-brand-darkGreen text-white">
-                              {post.author.name[0]}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="font-semibold text-sm">{post.author.name}</p>
-                            <p className="text-xs text-muted-foreground">{post.location}</p>
+                  {loading ? (
+                    <div className="text-center py-12">
+                      <p className="text-muted-foreground">Loading community posts...</p>
+                    </div>
+                  ) : posts.length === 0 ? (
+                    <div className="text-center py-12 bg-white rounded-xl">
+                      <p className="text-muted-foreground text-lg">No community posts yet.</p>
+                      <p className="text-sm text-muted-foreground mt-2">
+                        Our AI will be posting photo stories and travel tips daily.
+                      </p>
+                    </div>
+                  ) : (
+                    posts.map((post) => (
+                      <article key={post.id} className="bg-white rounded-xl shadow-sm overflow-hidden">
+                        {/* Header */}
+                        <div className="flex items-center justify-between p-4">
+                          <div className="flex items-center gap-3">
+                            <Avatar className="w-10 h-10">
+                              <AvatarImage src={post.author.avatar} />
+                              <AvatarFallback className="bg-brand-darkGreen text-white">
+                                {post.author.name[0]}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <p className="font-semibold text-sm">{post.author.name}</p>
+                              <p className="text-xs text-muted-foreground">{post.location}</p>
+                            </div>
                           </div>
+                          {post.nftMinted && (
+                            <Badge variant="amber" className="gap-1">
+                              <Award className="w-3 h-3" />
+                              NFT
+                            </Badge>
+                          )}
                         </div>
-                        {post.nftMinted && (
-                          <Badge variant="amber" className="gap-1">
-                            <Award className="w-3 h-3" />
-                            NFT
-                          </Badge>
-                        )}
-                      </div>
 
-                      {/* Media */}
-                      <div className={`grid ${post.media.length > 1 ? 'grid-cols-2' : 'grid-cols-1'} gap-1`}>
-                        {post.media.map((m, i) => (
-                          <div key={i} className="relative aspect-square">
-                            <Image src={m.url} alt="" fill className="object-cover" />
+                        {/* Media */}
+                        <div className={`grid ${post.media.length > 1 ? 'grid-cols-2' : 'grid-cols-1'} gap-1`}>
+                          {post.media.map((m, i) => (
+                            <div key={i} className="relative aspect-square">
+                              {m.url ? (
+                                <Image src={m.url} alt="" fill className="object-cover" />
+                              ) : (
+                                <div className="w-full h-full bg-brand-cream flex items-center justify-center">
+                                  <ImageIcon className="w-8 h-8 text-muted-foreground" />
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Actions */}
+                        <div className="p-4">
+                          <div className="flex items-center gap-4 mb-3">
+                            <button className="flex items-center gap-1 text-sm hover:text-red-500 transition-colors">
+                              <Heart className="w-5 h-5" />
+                              {post.likes}
+                            </button>
+                            <button className="flex items-center gap-1 text-sm hover:text-brand-amber transition-colors">
+                              <MessageCircle className="w-5 h-5" />
+                              {post.comments}
+                            </button>
+                            <button className="flex items-center gap-1 text-sm ml-auto hover:text-brand-darkGreen transition-colors">
+                              <Share2 className="w-5 h-5" />
+                            </button>
                           </div>
-                        ))}
-                      </div>
 
-                      {/* Actions */}
-                      <div className="p-4">
-                        <div className="flex items-center gap-4 mb-3">
-                          <button className="flex items-center gap-1 text-sm hover:text-red-500 transition-colors">
-                            <Heart className="w-5 h-5" />
-                            {post.likes}
-                          </button>
-                          <button className="flex items-center gap-1 text-sm hover:text-brand-amber transition-colors">
-                            <MessageCircle className="w-5 h-5" />
-                            {post.comments}
-                          </button>
-                          <button className="flex items-center gap-1 text-sm ml-auto hover:text-brand-darkGreen transition-colors">
-                            <Share2 className="w-5 h-5" />
-                          </button>
+                          <p className="text-sm mb-3">{post.caption}</p>
+
+                          {post.aiScore && (
+                            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                              <Badge variant="secondary" className="gap-1">
+                                <TrendingUp className="w-3 h-3" />
+                                AI Score: {post.aiScore.overall}/100
+                              </Badge>
+                              <Badge variant="amber" className="gap-1">
+                                <Award className="w-3 h-3" />
+                                {post.nomadTokensEarned} NOMAD
+                              </Badge>
+                            </div>
+                          )}
                         </div>
-
-                        <p className="text-sm mb-3">{post.caption}</p>
-
-                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                          <Badge variant="secondary" className="gap-1">
-                            <TrendingUp className="w-3 h-3" />
-                            AI Score: {post.aiScore.overall}/100
-                          </Badge>
-                          <Badge variant="amber" className="gap-1">
-                            <Award className="w-3 h-3" />
-                            {post.nomadTokens} NOMAD
-                          </Badge>
-                        </div>
-                      </div>
-                    </article>
-                  ))}
+                      </article>
+                    ))
+                  )}
                 </div>
 
                 {/* Sidebar */}
@@ -304,17 +353,23 @@ export default function CommunityPage() {
                   <Award className="w-12 h-12 mx-auto mb-4 text-brand-amber" />
                   <h2 className="font-display text-3xl font-bold mb-2">NFT Gallery</h2>
                   <p className="text-white/80 max-w-lg mx-auto">
-                    Every image posted on the community can be minted as an NFT on the blockchain. 
+                    Every image posted on the community can be minted as an NFT on the blockchain.
                     Stored on IPFS, owned by you forever.
                   </p>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {communityPosts
+                  {posts
                     .filter((p) => p.nftMinted)
                     .flatMap((p) => p.media)
                     .map((m, i) => (
                       <div key={i} className="relative aspect-square rounded-xl overflow-hidden group">
-                        <Image src={m.url} alt="NFT" fill className="object-cover" />
+                        {m.url ? (
+                          <Image src={m.url} alt="NFT" fill className="object-cover" />
+                        ) : (
+                          <div className="w-full h-full bg-brand-cream flex items-center justify-center">
+                            <ImageIcon className="w-8 h-8 text-muted-foreground" />
+                          </div>
+                        )}
                         <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                           <Button variant="secondary" size="sm" className="gap-1">
                             <Wallet className="w-4 h-4" />
@@ -330,6 +385,11 @@ export default function CommunityPage() {
                       </div>
                     ))}
                 </div>
+                {posts.filter((p) => p.nftMinted).length === 0 && (
+                  <div className="text-center py-12">
+                    <p className="text-muted-foreground">No NFTs minted yet.</p>
+                  </div>
+                )}
               </div>
             </TabsContent>
           </Tabs>

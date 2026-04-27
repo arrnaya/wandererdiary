@@ -1,4 +1,5 @@
 import type { CollectionConfig } from 'payload'
+import { slugify } from '@/lib/slugify'
 
 export const Tips: CollectionConfig = {
   slug: 'tips',
@@ -13,6 +14,18 @@ export const Tips: CollectionConfig = {
       return { author: { equals: req.user?.id } }
     },
     delete: ({ req }) => req.user?.role === 'admin',
+  },
+  hooks: {
+    beforeChange: [
+      async ({ data, operation }) => {
+        if (operation === 'create' || operation === 'update') {
+          if (!data.slug && data.title) {
+            data.slug = slugify(data.title)
+          }
+        }
+        return data
+      },
+    ],
   },
   fields: [
     {
@@ -33,6 +46,16 @@ export const Tips: CollectionConfig = {
       required: true,
     },
     {
+      name: 'status',
+      type: 'select',
+      options: [
+        { label: 'Draft', value: 'draft' },
+        { label: 'Published', value: 'published' },
+      ],
+      defaultValue: 'draft',
+      required: true,
+    },
+    {
       name: 'category',
       type: 'select',
       options: [
@@ -42,8 +65,15 @@ export const Tips: CollectionConfig = {
         { label: 'Safety', value: 'safety' },
         { label: 'Photography', value: 'photography' },
         { label: 'Solo Travel', value: 'solo_travel' },
+        { label: 'Food', value: 'food' },
+        { label: 'Culture', value: 'culture' },
       ],
       required: true,
+    },
+    {
+      name: 'excerpt',
+      type: 'textarea',
+      maxLength: 200,
     },
     {
       name: 'content',

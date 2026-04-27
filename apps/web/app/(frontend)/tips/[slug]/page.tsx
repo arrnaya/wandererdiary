@@ -1,25 +1,92 @@
+import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { formatDate } from '@/lib/utils'
-import { ArrowLeft, Clock } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
+import { getPayload } from 'payload'
+import config from '@payload-config'
+import { marked } from 'marked'
 
-const tip = {
-  title: '10 Packing Tips for Long-Term Travelers',
-  category: 'Packing',
-  author: { name: 'Sarah Mitchell', avatar: '' },
-  publishedAt: '2024-05-10',
-  content: `
-    <p>After three years of living out of a backpack, I have learned that packing is an art form. Here are my top 10 tips for traveling light without sacrificing comfort.</p>
-    <h2>1. Roll, Don't Fold</h2>
-    <p>Rolling your clothes saves space and prevents wrinkles. It's a game changer.</p>
-    <h2>2. Pack a Universal Adapter</h2>
-    <p>One adapter with USB ports covers most of your charging needs worldwide.</p>
-  `,
+async function getTip(slug: string) {
+  const payload = await getPayload({ config })
+  const result = await payload.find({
+    collection: 'tips',
+    where: {
+      slug: { equals: slug },
+      status: { equals: 'published' },
+    },
+    limit: 1,
+    depth: 2,
+  })
+  return result.docs[0] || null
 }
 
-export default function TipPage() {
+function renderContent(content: any): string {
+  if (!content) return ''
+
+  if (typeof content === 'string') {
+    return marked.parse(content, { async: false }) as string
+  }
+
+  if (content.root?.children) {
+    const firstNode = content.root.children[0]
+    if (
+      firstNode?.type === 'paragraph' &&
+      content.root.children.length === 1 &&
+      firstNode.children?.length === 1 &&
+      firstNode.children[0]?.text?.includes('#')
+    ) {
+      return marked.parse(firstNode.children[0].text, { async: false }) as string
+    }
+
+    let html = ''
+    for (const node of content.root.children) {
+      if (node.type === 'paragraph') {
+        const text = node.children?.map((c: any) => c.text || '').join('') || ''
+        if (text) html += `<p>${text}</p>`
+      } else if (node.type === 'heading') {
+        const text = node.children?.map((c: any) => c.text || '').join('') || ''
+        const tag = `h${node.tag || 2}`
+        html += `<${tag}>${text}</${tag}>`
+      } else if (node.type === 'list') {
+        const items = node.children?.map((item: any) => {
+          const text = item.children?.map((c: any) => c.text || '').join('') || ''
+          return `<li>${text}</li>`
+        }).join('') || ''
+        html += `<ul>${items}</ul>`
+      }
+    }
+    return html
+  }
+
+  return ''
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
+  const tip = await getTip(slug)
+  if (!tip) return { title: 'Tip Not Found' }
+  return {
+    title: `${tip.title} | WandererDiary`,
+    description: tip.excerpt || tip.title,
+  }
+}
+
+export default async function TipPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>
+}) {
+  const { slug } = await params
+  const tip = await getTip(slug)
+
+  if (!tip) {
+    notFound()
+  }
+
+  const contentHtml = renderContent(tip.content)
+
   return (
     <article className="animate-fade-in py-12 bg-brand-offWhite">
       <div className="container mx-auto px-4 max-w-3xl">
@@ -35,16 +102,18 @@ export default function TipPage() {
 
         <div className="flex items-center gap-3 mb-8 text-sm text-muted-foreground">
           <Avatar className="w-8 h-8">
-            <AvatarImage src={tip.author.avatar} />
-            <AvatarFallback className="bg-brand-darkGreen text-white text-xs">{tip.author.name[0]}</AvatarFallback>
+            <AvatarImage src={tip.author?.avatar?.url} />
+            <AvatarFallback className="bg-brand-darkGreen text-white text-xs">
+              {tip.author?.name?.[0] || 'W'}
+            </AvatarFallback>
           </Avatar>
-          <span>{tip.author.name}</span>
+          <span>{tip.author?.name || 'Wanderer'}</span>
           <span>{formatDate(tip.publishedAt)}</span>
         </div>
 
         <div
-          className="prose prose-lg max-w-none prose-headings:font-display prose-headings:text-brand-darkGreen"
-          dangerouslySetInnerHTML={{ __html: tip.content }}
+          className="prose prose-lg max-w-none prose-headings:font-display prose-headings:text-brand-darkGreen prose-a:text-brand-amber hover:prose-a:text-brand-amber/80 prose-img:rounded-xl prose-blockquote:border-l-brand-amber prose-blockquote:bg-brand-offWhite prose-blockquote:py-2 prose-blockquote:px-4 prose-blockquote:rounded-r-lg"
+          dangerouslySetInnerHTML={{ __html: contentHtml }}
         />
       </div>
     </article>
