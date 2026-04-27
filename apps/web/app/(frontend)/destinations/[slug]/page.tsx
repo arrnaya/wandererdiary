@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { MapPin, ArrowLeft, Star, Calendar, TreePine } from 'lucide-react'
 import { getPayload } from 'payload'
 import config from '@payload-config'
-import { getLocalCoverImage } from '@/lib/image-fallback'
+import { resolveCoverImage } from '@/lib/image-fallback'
 
 async function getDestination(slug: string) {
   const payload = await getPayload({ config })
@@ -171,9 +171,7 @@ export default async function DestinationPage({
                       title: story.title,
                       slug: story.slug,
                       category: story.category || 'Destination',
-                      coverImage: story.coverImage?.url
-                        ? { url: story.coverImage.url, alt: story.coverImage.alt || story.title }
-                        : getLocalCoverImage(story.slug, story.title),
+                      coverImage: resolveCoverImage(story),
                       author: story.author
                         ? { name: story.author.name, avatar: story.author.avatar }
                         : undefined,

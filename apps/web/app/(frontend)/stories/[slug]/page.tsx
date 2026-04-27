@@ -19,7 +19,7 @@ import {
 import { getPayload } from 'payload'
 import config from '@payload-config'
 import { marked } from 'marked'
-import { getLocalCoverImage } from '@/lib/image-fallback'
+import { resolveCoverImage } from '@/lib/image-fallback'
 
 async function getStory(slug: string) {
   const payload = await getPayload({ config })
@@ -143,18 +143,10 @@ export default async function StoryPage({
   return (
     <article className="animate-fade-in">
       <div className="relative h-[500px] md:h-[600px]">
-        {story.coverImage?.url ? (
+        {resolveCoverImage(story as any)?.url ? (
           <Image
-            src={story.coverImage.url}
-            alt={story.coverImage.alt || story.title}
-            fill
-            className="object-cover"
-            priority
-          />
-        ) : getLocalCoverImage(story.slug as string, story.title as string)?.url ? (
-          <Image
-            src={getLocalCoverImage(story.slug as string, story.title as string)!.url}
-            alt={story.title as string}
+            src={resolveCoverImage(story as any)!.url}
+            alt={resolveCoverImage(story as any)!.alt}
             fill
             className="object-cover"
             priority
@@ -329,9 +321,7 @@ export default async function StoryPage({
                       title: s.title,
                       slug: s.slug,
                       category: s.category || 'Destination',
-                      coverImage: s.coverImage?.url
-                        ? { url: s.coverImage.url, alt: s.coverImage.alt || s.title }
-                        : getLocalCoverImage(s.slug, s.title),
+                      coverImage: resolveCoverImage(s),
                       author: s.author
                         ? { name: s.author.name, avatar: s.author.avatar }
                         : undefined,

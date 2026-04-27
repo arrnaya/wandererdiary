@@ -6,7 +6,7 @@ import { Globe, BookOpen, Feather, Users, ArrowRight, Send } from 'lucide-react'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 import { polishOneStory } from '@/lib/ai/polish'
-import { getLocalCoverImage } from '@/lib/image-fallback'
+import { resolveCoverImage } from '@/lib/image-fallback'
 
 async function getHomepageData(searchParams?: any) {
   const payload = await getPayload({ config })
@@ -157,9 +157,7 @@ export default async function HomePage({ searchParams }: { searchParams: any }) 
                   title: story.title,
                   slug: story.slug,
                   category: story.category || 'Destination',
-                  coverImage: story.coverImage?.url
-                    ? { url: story.coverImage.url, alt: story.coverImage.alt || story.title }
-                    : getLocalCoverImage(story.slug, story.title),
+                  coverImage: resolveCoverImage(story),
                   author: story.author
                     ? { name: story.author.name, avatar: story.author.avatar }
                     : undefined,
@@ -194,9 +192,7 @@ export default async function HomePage({ searchParams }: { searchParams: any }) 
                       slug: story.slug,
                       excerpt: story.excerpt,
                       category: story.category || 'Destination',
-                      coverImage: story.coverImage?.url
-                        ? { url: story.coverImage.url, alt: story.coverImage.alt || story.title }
-                        : getLocalCoverImage(story.slug, story.title),
+                      coverImage: resolveCoverImage(story),
                       author: story.author
                         ? { name: story.author.name, avatar: story.author.avatar }
                         : undefined,
